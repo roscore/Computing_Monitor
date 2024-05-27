@@ -16,9 +16,15 @@ def get_gpu_power():
 
 def get_cpu_power():
     try:
-        cpu_power_cmd = "sudo turbostat --Summary --quiet --show PkgWatt --interval 1 | awk 'NR==3 {print $4}'"
-        cpu_power = subprocess.check_output(cpu_power_cmd, shell=True).strip()
-        return float(cpu_power)
+        cpu_power_cmd = "sudo turbostat --Summary --quiet --show PkgWatt --interval 1"
+        result = subprocess.check_output(cpu_power_cmd, shell=True, universal_newlines=True, stderr=subprocess.STDOUT).strip()
+        lines = result.splitlines()
+        if len(lines) > 2:
+            cpu_power = float(lines[2].split()[-1])  # Extracting the PkgWatt value from the output
+            return cpu_power
+        else:
+            print("Unexpected output format from turbostat.")
+            return 0.0
     except subprocess.CalledProcessError as e:
         print(f"Error getting CPU power: {e}")
         return 0.0
