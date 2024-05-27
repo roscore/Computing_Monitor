@@ -24,7 +24,7 @@ def get_gpu_utilization():
         return 0.0
 
 def get_cpu_usage():
-    return psutil.cpu_percent(interval=0.1)
+    return psutil.cpu_percent(interval=0.02)
 
 def get_ram_usage():
     return psutil.virtual_memory().used / (1024 ** 3)  # Convert bytes to GB
@@ -98,6 +98,7 @@ while True:
     total_gpu_power += gpu_power
     avg_gpu_power = total_gpu_power / count
 
+    os.system('cls' if os.name == 'nt' else 'clear')
     print(f"Time:    [{current_time}]")
     print(f"CPU:     {cpu_usage:<7.2f}%  Min: {min_cpu_usage:<7.2f}%  Max: {max_cpu_usage:<7.2f}%  Avg: {avg_cpu_usage:<7.2f}%")
     print(f"RAM:     {ram_usage:<7.2f} GB  Min: {min_ram_usage:<7.2f} GB  Max: {max_ram_usage:<7.2f} GB  Avg: {avg_ram_usage:<7.2f} GB")
@@ -127,7 +128,7 @@ while True:
             'Avg GPU Power (W)': avg_gpu_power
         })
 
-    # 다음 측정을 0.1초 간격으로 실행
+    # 다음 측정을 0.02초 간격으로 실행
     elapsed_time = time.time() - start_time
-    sleep_time = max(0, 0.1 - elapsed_time)
+    sleep_time = max(0, 0.02 - elapsed_time)
     time.sleep(sleep_time)
