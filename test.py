@@ -16,17 +16,15 @@ def get_gpu_power():
 
 def get_cpu_power():
     try:
-        cpu_power_cmd = "sudo turbostat --Summary --quiet --show PkgWatt --interval 1 2>&1 | grep 'PkgWatt'"
-        result = subprocess.check_output(cpu_power_cmd, shell=True, universal_newlines=True).strip()
-        # Extract the CPU power from the result
-        if result:
-            lines = result.splitlines()
-            last_line = lines[-1]  # Get the last line with data
-            parts = last_line.split()
-            if 'PkgWatt' in parts:
-                index = parts.index('PkgWatt')
-                cpu_power = float(parts[index + 1])
-                return cpu_power
+        cpu_power_cmd = "sudo turbostat --Summary --quiet --show PkgWatt --interval 1"
+        result = subprocess.check_output(cpu_power_cmd, shell=True, universal_newlines=True, stderr=subprocess.STDOUT).strip()
+        lines = result.splitlines()
+        for line in lines:
+            if 'PkgWatt' in line:
+                parts = line.split()
+                if len(parts) > 1:
+                    cpu_power = float(parts[-1])  # Extracting the PkgWatt value from the output
+                    return cpu_power
         return 0.0
     except subprocess.CalledProcessError as e:
         print(f"Error getting CPU power: {e}")
