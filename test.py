@@ -16,18 +16,12 @@ def get_gpu_power():
 
 def get_cpu_power():
     try:
-        cpu_power_cmd = "sensors | awk '/Package id 0:/ {print $4}' | cut -c 2-5"
-        cpu_power = subprocess.check_output(cpu_power_cmd, shell=True).strip()
-        if cpu_power:
-            return float(cpu_power)
-        else:
-            print("No CPU power data available.")
-            return 0.0
-    except subprocess.CalledProcessError as e:
+        # Adjust the path based on the actual hwmon path for AMD CPU
+        with open('/sys/class/hwmon/hwmon0/device/power1_input', 'r') as f:
+            power = int(f.read().strip())
+        return power / 1e6  # Convert microjoules to watts
+    except Exception as e:
         print(f"Error getting CPU power: {e}")
-        return 0.0
-    except ValueError:
-        print("Failed to convert CPU power to float. Setting it to 0.0")
         return 0.0
 
 def get_gpu_utilization():
