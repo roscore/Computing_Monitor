@@ -8,7 +8,7 @@ import os
 def get_gpu_power():
     try:
         power_cmd = "nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits"
-        power = subprocess.check_output(power_cmd, shell=True)
+        power = subprocess.check_output(power_cmd, shell=True).strip()
         return float(power)
     except subprocess.CalledProcessError as e:
         print(f"Error getting GPU power: {e}")
@@ -16,8 +16,8 @@ def get_gpu_power():
 
 def get_cpu_power():
     try:
-        cpu_power_cmd = "sensors | awk '/Package id 0:/ {print $4}' | cut -c 2-5"
-        cpu_power = subprocess.check_output(cpu_power_cmd, shell=True)
+        cpu_power_cmd = "sensors | awk '/Package id 0:/ {print $4}' | cut -c 2-"
+        cpu_power = subprocess.check_output(cpu_power_cmd, shell=True).strip()
         return float(cpu_power)
     except subprocess.CalledProcessError as e:
         print(f"Error getting CPU power: {e}")
@@ -29,7 +29,7 @@ def get_cpu_power():
 def get_gpu_utilization():
     try:
         utilization_cmd = "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits"
-        utilization = subprocess.check_output(utilization_cmd, shell=True)
+        utilization = subprocess.check_output(utilization_cmd, shell=True).strip()
         return float(utilization)
     except subprocess.CalledProcessError as e:
         print(f"Error getting GPU utilization: {e}")
@@ -44,17 +44,28 @@ def get_ram_usage():
 def get_cpu_instructions():
     try:
         instructions_cmd = "perf stat -e instructions -a sleep 1 2>&1 | grep instructions | awk '{print $1}'"
-        instructions = subprocess.check_output(instructions_cmd, shell=True, universal_newlines=True)
-        return int(instructions.replace(',', ''))
+        instructions = subprocess.check_output(instructions_cmd, shell=True, universal_newlines=True).strip()
+        if instructions:
+            return int(instructions.replace(',', ''))
+        else:
+            print("Failed to get CPU instructions. Setting it to 0")
+            return 0
     except subprocess.CalledProcessError as e:
         print(f"Error getting CPU instructions: {e}")
+        return 0
+    except ValueError:
+        print("Failed to convert CPU instructions to int. Setting it to 0")
         return 0
 
 def get_gpu_flops():
     try:
         flops_cmd = "nvidia-smi dmon -s u | grep '^[0-9]' | awk '{print $5}'"
-        flops = subprocess.check_output(flops_cmd, shell=True)
-        return int(flops)
+        flops = subprocess.check_output(flops_cmd, shell=True).strip()
+        if flops:
+            return int(flops)
+        else:
+            print("Failed to get GPU FLOPS. Setting it to 0")
+            return 0
     except subprocess.CalledProcessError as e:
         print(f"Error getting GPU FLOPS: {e}")
         return 0
