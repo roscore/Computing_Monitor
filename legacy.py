@@ -11,8 +11,11 @@ def get_gpu_power():
 
 def get_cpu_power():
     cpu_power_cmd = "sensors | awk '/Package id 0:/ {print $4}' | cut -c 2-5"
-    cpu_power = subprocess.check_output(cpu_power_cmd, shell=True)
-    return float(cpu_power)
+    cpu_power = subprocess.check_output(cpu_power_cmd, shell=True).strip()
+    if cpu_power:
+        return float(cpu_power)
+    else:
+        return 0.0
 
 peak_gpu_power = 0
 peak_cpu_power = 0
@@ -23,8 +26,21 @@ count = 0
 while True:
     os.system('cls' if os.name=='nt' else 'clear')
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-    gpu_power = get_gpu_power()
-    cpu_power = get_cpu_power()
+    try:
+        gpu_power = get_gpu_power()
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting GPU power: {e}")
+        gpu_power = 0.0
+    
+    try:
+        cpu_power = get_cpu_power()
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting CPU power: {e}")
+        cpu_power = 0.0
+    except ValueError as e:
+        print(f"Error converting CPU power to float: {e}")
+        cpu_power = 0.0
+    
     count += 1
     
     if gpu_power > peak_gpu_power:
