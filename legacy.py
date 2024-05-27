@@ -10,7 +10,7 @@ def get_gpu_power():
     return float(power)
 
 def get_cpu_power():
-    cpu_power_cmd = "sensors | awk '/Package id 0:/ {print $4}' | cut -c 2-5"
+    cpu_power_cmd = "sensors | awk '/Package id 0:/ {print $4}' | tr -d '+' | cut -d'.' -f1"
     cpu_power = subprocess.check_output(cpu_power_cmd, shell=True).strip()
     if cpu_power:
         return float(cpu_power)
