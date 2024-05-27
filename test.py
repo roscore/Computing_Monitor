@@ -6,19 +6,34 @@ import csv
 import os
 
 def get_gpu_power():
-    power_cmd = "nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits"
-    power = subprocess.check_output(power_cmd, shell=True)
-    return float(power)
+    try:
+        power_cmd = "nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits"
+        power = subprocess.check_output(power_cmd, shell=True)
+        return float(power)
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting GPU power: {e}")
+        return 0.0
 
 def get_cpu_power():
-    cpu_power_cmd = "sensors | awk '/Package id 0:/ {print $4}' | cut -c 2-5"
-    cpu_power = subprocess.check_output(cpu_power_cmd, shell=True)
-    return float(cpu_power)
+    try:
+        cpu_power_cmd = "sensors | awk '/Package id 0:/ {print $4}' | cut -c 2-5"
+        cpu_power = subprocess.check_output(cpu_power_cmd, shell=True)
+        return float(cpu_power)
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting CPU power: {e}")
+        return 0.0
+    except ValueError:
+        print("Failed to convert CPU power to float. Setting it to 0.0")
+        return 0.0
 
 def get_gpu_utilization():
-    utilization_cmd = "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits"
-    utilization = subprocess.check_output(utilization_cmd, shell=True)
-    return float(utilization)
+    try:
+        utilization_cmd = "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits"
+        utilization = subprocess.check_output(utilization_cmd, shell=True)
+        return float(utilization)
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting GPU utilization: {e}")
+        return 0.0
 
 def get_cpu_usage():
     return psutil.cpu_percent(interval=1)
@@ -27,14 +42,22 @@ def get_ram_usage():
     return psutil.virtual_memory().used / (1024 ** 3)  # Convert bytes to GB
 
 def get_cpu_instructions():
-    instructions_cmd = "perf stat -e instructions -a sleep 1 2>&1 | grep instructions | awk '{print $1}'"
-    instructions = subprocess.check_output(instructions_cmd, shell=True, universal_newlines=True)
-    return int(instructions.replace(',', ''))
+    try:
+        instructions_cmd = "perf stat -e instructions -a sleep 1 2>&1 | grep instructions | awk '{print $1}'"
+        instructions = subprocess.check_output(instructions_cmd, shell=True, universal_newlines=True)
+        return int(instructions.replace(',', ''))
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting CPU instructions: {e}")
+        return 0
 
 def get_gpu_flops():
-    flops_cmd = "nvidia-smi dmon -s u | grep '^[0-9]' | awk '{print $5}'"
-    flops = subprocess.check_output(flops_cmd, shell=True)
-    return int(flops)
+    try:
+        flops_cmd = "nvidia-smi dmon -s u | grep '^[0-9]' | awk '{print $5}'"
+        flops = subprocess.check_output(flops_cmd, shell=True)
+        return int(flops)
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting GPU FLOPS: {e}")
+        return 0
 
 # Generate dynamic file name based on the current date and time
 current_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -93,4 +116,4 @@ while True:
             'GPU FLOPS': gpu_flops
         })
 
-    time.sleep(1
+    time.sleep(1)
