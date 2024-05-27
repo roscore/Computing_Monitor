@@ -14,25 +14,6 @@ def get_gpu_power():
         print(f"Error getting GPU power: {e}")
         return 0.0
 
-def get_cpu_power():
-    try:
-        cpu_power_cmd = "sudo turbostat --Summary --quiet --show PkgWatt --interval 1"
-        result = subprocess.check_output(cpu_power_cmd, shell=True, universal_newlines=True, stderr=subprocess.STDOUT).strip()
-        lines = result.splitlines()
-        for line in lines:
-            if 'PkgWatt' in line:
-                parts = line.split()
-                if len(parts) > 1:
-                    cpu_power = float(parts[-1])  # Extracting the PkgWatt value from the output
-                    return cpu_power
-        return 0.0
-    except subprocess.CalledProcessError as e:
-        print(f"Error getting CPU power: {e}")
-        return 0.0
-    except ValueError:
-        print("Failed to convert CPU power to float. Setting it to 0.0")
-        return 0.0
-
 def get_gpu_utilization():
     try:
         utilization_cmd = "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits"
@@ -54,14 +35,13 @@ output_file = f'resource_usage_{current_datetime}.csv'
 
 # CSV 파일 헤더 작성
 with open(output_file, 'w', newline='') as csvfile:
-    fieldnames = ['Time', 'CPU Usage (%)', 'CPU Power (W)', 'RAM Usage (GB)', 'GPU Usage (%)', 'GPU Power (W)']
+    fieldnames = ['Time', 'CPU Usage (%)', 'RAM Usage (GB)', 'GPU Usage (%)', 'GPU Power (W)']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
 
 peak_gpu_power = 0
-peak_cpu_power = 0
 avg_gpu_power = 0
-avg_cpu_power = 0
+avg_cpu_usage = 0
 count = 0
 
 while True:
@@ -70,20 +50,16 @@ while True:
     ram_usage = get_ram_usage()
     gpu_utilization = get_gpu_utilization()
     gpu_power = get_gpu_power()
-    cpu_power = get_cpu_power()
     count += 1
 
     if gpu_power > peak_gpu_power:
         peak_gpu_power = gpu_power
 
-    if cpu_power > peak_cpu_power:
-        peak_cpu_power = cpu_power
-
     avg_gpu_power = (avg_gpu_power * (count - 1) + gpu_power) / count
-    avg_cpu_power = (avg_cpu_power * (count - 1) + cpu_power) / count
+    avg_cpu_usage = (avg_cpu_usage * (count - 1) + cpu_usage) / count
 
     print(f"Time:    [{current_time}]")
-    print(f"CPU:     {cpu_usage:<7.2f}%  Power: {cpu_power:<7.2f} W  Peak: {peak_cpu_power:<7.2f} W  Avg: {avg_cpu_power:<7.2f} W")
+    print(f"CPU:     {cpu_usage:<7.2f}%  Avg: {avg_cpu_usage:<7.2f}%")
     print(f"RAM:     {ram_usage:<7.2f} GB")
     print(f"GPU:     {gpu_utilization:<7.2f}%  Power: {gpu_power:<7.2f} W  Peak: {peak_gpu_power:<7.2f} W  Avg: {avg_gpu_power:<7.2f} W")
     print("-----------------------------")
@@ -94,7 +70,6 @@ while True:
         writer.writerow({
             'Time': current_time,
             'CPU Usage (%)': cpu_usage,
-            'CPU Power (W)': cpu_power,
             'RAM Usage (GB)': ram_usage,
             'GPU Usage (%)': gpu_utilization,
             'GPU Power (W)': gpu_power
