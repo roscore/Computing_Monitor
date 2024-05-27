@@ -48,11 +48,11 @@ def get_cpu_usage():
 def get_ram_usage():
     return psutil.virtual_memory().used / (1024 ** 3)  # Convert bytes to GB
 
-# Generate dynamic file name based on the current date and time
+# 현재 날짜와 시간 기반으로 동적 파일 이름 생성
 current_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 output_file = f'resource_usage_{current_datetime}.csv'
 
-# Write the header of the CSV file
+# CSV 파일 헤더 작성
 with open(output_file, 'w', newline='') as csvfile:
     fieldnames = ['Time', 'CPU Usage (%)', 'CPU Power (W)', 'RAM Usage (GB)', 'GPU Usage (%)', 'GPU Power (W)']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -88,7 +88,7 @@ while True:
     print(f"GPU:     {gpu_utilization:<7.2f}%  Power: {gpu_power:<7.2f} W  Peak: {peak_gpu_power:<7.2f} W  Avg: {avg_gpu_power:<7.2f} W")
     print("-----------------------------")
 
-    # Append the current data to the CSV file
+    # 현재 데이터를 CSV 파일에 추가
     with open(output_file, 'a', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writerow({
